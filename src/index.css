@@ -8,51 +8,61 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
   
-  /* Colors - Dark theme (Zinc) */
-  --color-background: oklch(0.141 0 0);
-  --color-foreground: oklch(0.985 0 0);
+  /* Colors - Earthy Dark Theme */
+  /* Background: Deep warm stone/brown */
+  --color-background: oklch(0.18 0.03 55);
+  /* Foreground: Warm cream/off-white */
+  --color-foreground: oklch(0.92 0.02 85);
   
-  --color-card: oklch(0.141 0 0);
-  --color-card-foreground: oklch(0.985 0 0);
+  /* Card: Slightly lighter warm stone */
+  --color-card: oklch(0.21 0.03 55);
+  --color-card-foreground: oklch(0.92 0.02 85);
   
-  --color-popover: oklch(0.141 0 0);
-  --color-popover-foreground: oklch(0.985 0 0);
+  /* Popover: Same as card */
+  --color-popover: oklch(0.21 0.03 55);
+  --color-popover-foreground: oklch(0.92 0.02 85);
   
-  --color-primary: oklch(0.985 0 0);
-  --color-primary-foreground: oklch(0.205 0 0);
+  /* Primary: Muted Olive/Sage Green */
+  --color-primary: oklch(0.65 0.12 140);
+  --color-primary-foreground: oklch(0.15 0.04 140);
   
-  --color-secondary: oklch(0.274 0 0);
-  --color-secondary-foreground: oklch(0.985 0 0);
+  /* Secondary: Warm Sand/Beige (darkened for dark mode) */
+  --color-secondary: oklch(0.30 0.04 55);
+  --color-secondary-foreground: oklch(0.92 0.02 85);
   
-  --color-muted: oklch(0.274 0 0);
-  --color-muted-foreground: oklch(0.708 0 0);
+  /* Muted: Dark warm grey */
+  --color-muted: oklch(0.25 0.03 55);
+  --color-muted-foreground: oklch(0.70 0.02 85);
   
-  --color-accent: oklch(0.274 0 0);
-  --color-accent-foreground: oklch(0.985 0 0);
+  /* Accent: Terracotta/Rust (subtle) */
+  --color-accent: oklch(0.30 0.04 55);
+  --color-accent-foreground: oklch(0.92 0.02 85);
   
-  --color-destructive: oklch(0.396 0.141 25.723);
-  --color-destructive-foreground: oklch(0.637 0.237 25.331);
+  /* Destructive: Muted Earthy Red */
+  --color-destructive: oklch(0.45 0.15 25);
+  --color-destructive-foreground: oklch(0.92 0.02 85);
   
-  --color-border: oklch(0.274 0 0);
-  --color-input: oklch(0.274 0 0);
-  --color-ring: oklch(0.556 0 0);
+  /* Borders: Low contrast warm grey */
+  --color-border: oklch(0.30 0.03 55);
+  --color-input: oklch(0.30 0.03 55);
+  --color-ring: oklch(0.65 0.12 140); /* Matches primary */
   
-  /* Chart colors */
-  --color-chart-1: oklch(0.488 0.243 264.376);
-  --color-chart-2: oklch(0.696 0.17 162.48);
-  --color-chart-3: oklch(0.769 0.188 70.08);
-  --color-chart-4: oklch(0.627 0.265 303.9);
-  --color-chart-5: oklch(0.645 0.246 16.439);
+  /* Chart colors - Earthy tones */
+  --color-chart-1: oklch(0.65 0.15 140); /* Green */
+  --color-chart-2: oklch(0.60 0.15 50);  /* Sienna */
+  --color-chart-3: oklch(0.70 0.12 85);  /* Mustard */
+  --color-chart-4: oklch(0.55 0.10 200); /* Slate Blue */
+  --color-chart-5: oklch(0.65 0.15 25);  /* Red/Rust */
   
-  /* Sidebar - slightly different surface */
-  --color-sidebar: oklch(0.12 0 0);
-  --color-sidebar-foreground: oklch(0.985 0 0);
-  --color-sidebar-primary: oklch(0.488 0.243 264.376);
-  --color-sidebar-primary-foreground: oklch(0.985 0 0);
-  --color-sidebar-accent: oklch(0.274 0 0);
-  --color-sidebar-accent-foreground: oklch(0.985 0 0);
-  --color-sidebar-border: oklch(0.274 0 0);
-  --color-sidebar-ring: oklch(0.556 0 0);
+  /* Sidebar - Darker earthy tone */
+  --color-sidebar: oklch(0.15 0.03 55);
+  --color-sidebar-foreground: oklch(0.92 0.02 85);
+  --color-sidebar-primary: oklch(0.65 0.12 140);
+  --color-sidebar-primary-foreground: oklch(0.15 0.04 140);
+  --color-sidebar-accent: oklch(0.25 0.03 55);
+  --color-sidebar-accent-foreground: oklch(0.92 0.02 85);
+  --color-sidebar-border: oklch(0.25 0.03 55);
+  --color-sidebar-ring: oklch(0.65 0.12 140);
 
   /* Fonts */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -98,6 +108,23 @@ body {
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+
+/* Noise texture for earthy feel */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50; /* Above everything but allowing clicks? No, z-index -1 is better if background is opaque */
+  /* If background is set on body, z-index -1 puts it behind body background? */
+  /* Actually, body has background-color. */
+  /* Let's use pointer-events: none and mix-blend-mode: overlay on top */
+  z-index: 9999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  mix-blend-mode: overlay;
 }
 
 /* Scrollbar styling */

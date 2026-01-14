@@ -74,7 +74,7 @@ export function useOpenCode(): UseOpenCodeResult {
       });
 
       if (response.data) {
-        const messages = (response.data as any[]).map((msg: any) => {
+        const messages: Message[] = (response.data as any[]).map((msg: any) => {
           const parts: MessagePart[] = (msg.parts || []).map((p: any) => ({
             type: p.type,
             content: p.text || "",
