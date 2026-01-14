@@ -160,44 +160,6 @@ export function OpenCodeProvider({ children }: { children: ReactNode }) {
         }
         break;
       }
-        break;
-      }
-
-      case "message.updated": {
-        const msg = event.properties as any;
-        const parts: MessagePart[] = (msg.parts || []).map((p: any) => ({
-          type: p.type,
-          content: p.text || "",
-          toolName: p.toolName,
-        }));
-        
-        const textContent = parts
-          .filter((p) => p.type === "text")
-          .map((p) => p.content)
-          .join("\n");
-
-        updateMessage(msg.id, {
-          content: textContent,
-          parts,
-          status: "streaming",
-        });
-        break;
-      }
-
-      case "message.part.updated": {
-        const props = event.properties as any;
-        const part = props.part;
-        
-        if (lastMessageIdRef.current && part && part.type === "text") {
-          // Assume part.text is accumulated content
-          updateMessage(lastMessageIdRef.current, {
-            content: part.text,
-            status: "streaming",
-            parts: [{ type: "text", content: part.text }]
-          });
-        }
-        break;
-      }
 
       case "session.status": {
         const props = event.properties as any;
