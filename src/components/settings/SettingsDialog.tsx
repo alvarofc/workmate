@@ -35,6 +35,7 @@ const MODELS: Record<string, { id: string; name: string }[]> = {
     { id: "anthropic/claude-3.5-sonnet", name: "Claude 3.5 Sonnet" },
     { id: "openai/gpt-4o", name: "GPT-4o" },
     { id: "google/gemini-2.0-flash-exp", name: "Gemini 2.0 Flash" },
+    { id: "z-ai/glm-4.5-air:free", name: "GLM-4.5 Air (Free)" },
   ],
   anthropic: [
     { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4" },
