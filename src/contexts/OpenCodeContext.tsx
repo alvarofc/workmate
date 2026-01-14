@@ -145,6 +145,34 @@ export function OpenCodeProvider({ children }: { children: ReactNode }) {
         break;
       }
 
+      case "message.part.updated": {
+        const props = event.properties as any;
+        const part = props.part;
+        
+        if (lastMessageIdRef.current && part && part.type === "text") {
+          // Assume part.text is accumulated content
+          updateMessage(lastMessageIdRef.current, {
+            content: part.text,
+            status: "streaming",
+            parts: [{ type: "text", content: part.text }]
+          });
+        }
+        break;
+      }
+
+      case "session.status": {
+        const props = event.properties as any;
+        if (props.status?.type === "idle") {
+          if (lastMessageIdRef.current) {
+            updateMessage(lastMessageIdRef.current, { status: "complete" });
+            lastMessageIdRef.current = null;
+          }
+          setLoading(false);
+        }
+        break;
+      }
+
+      case "session.idle":
       case "run.completed":
       case "run.failed":
         if (lastMessageIdRef.current) {
@@ -152,6 +180,12 @@ export function OpenCodeProvider({ children }: { children: ReactNode }) {
           lastMessageIdRef.current = null;
         }
         setLoading(false);
+        break;
+
+      case "session.created":
+      case "session.updated":
+      case "server.heartbeat":
+        // Ignore these events to reduce noise
         break;
 
       default:
