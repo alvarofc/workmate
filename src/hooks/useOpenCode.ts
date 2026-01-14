@@ -9,7 +9,7 @@ import {
   type OpenCodeConfig,
 } from "@/lib/tauri";
 import { useAppStore } from "@/stores/appStore";
-import type { PermissionRequest } from "@/types";
+import type { PermissionRequest, Message, MessagePart } from "@/types";
 
 type OpenCodeClient = ReturnType<typeof createOpencodeClient>;
 
@@ -44,8 +44,11 @@ export function useOpenCode(): UseOpenCodeResult {
   const { 
     config, 
     addMessage, 
+    updateMessage,
     setLoading,
     setPendingPermission,
+    setSessions,
+    setMessages,
   } = useAppStore();
   
   const [isConnected, setIsConnected] = useState(false);
@@ -57,6 +60,58 @@ export function useOpenCode(): UseOpenCodeResult {
   
   const clientRef = useRef<OpenCodeClient | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const lastMessageIdRef = useRef<string | null>(null);
+
+  // Load messages for a session
+  const loadSessionMessages = useCallback(async (sessionId: string) => {
+    const client = clientRef.current;
+    if (!client) return;
+
+    try {
+      setLoading(true);
+      const response = await client.session.messages({
+        path: { id: sessionId }
+      });
+
+      if (response.data) {
+        const messages = (response.data as any[]).map((msg: any) => {
+          const parts: MessagePart[] = (msg.parts || []).map((p: any) => ({
+            type: p.type,
+            content: p.text || "",
+            toolName: p.toolName,
+          }));
+          
+          const content = parts
+            .filter((p) => p.type === "text")
+            .map((p) => p.content)
+            .join("\n");
+
+          return {
+            id: msg.id,
+            role: msg.role,
+            content,
+            parts,
+            timestamp: msg.created_at ? new Date(msg.created_at).getTime() : Date.now(),
+            status: "complete" as const,
+          };
+        });
+        setMessages(messages);
+      }
+    } catch (err) {
+      console.error("Failed to load session messages:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [setMessages, setLoading]);
+
+  // Sync currentSessionId with store
+  useEffect(() => {
+    if (currentSessionId) {
+      loadSessionMessages(currentSessionId);
+    } else {
+      setMessages([]);
+    }
+  }, [currentSessionId, loadSessionMessages, setMessages]);
 
   // Check if OpenCode is installed on mount
   useEffect(() => {
@@ -137,9 +192,62 @@ export function useOpenCode(): UseOpenCodeResult {
         setPendingPermission(permissionRequest);
         break;
 
-      case "message.created":
-      case "message.updated":
-        // Handle message updates - could be used for streaming
+      case "message.created": {
+        const msg = event.properties as any;
+        // Only handle assistant messages (user messages are added optimistically)
+        if (msg.role === "assistant") {
+          lastMessageIdRef.current = msg.id;
+          const parts: MessagePart[] = (msg.parts || []).map((p: any) => ({
+            type: p.type,
+            content: p.text || "",
+            toolName: p.toolName,
+          }));
+          
+          const textContent = parts
+            .filter((p) => p.type === "text")
+            .map((p) => p.content)
+            .join("\n");
+
+          addMessage({
+            id: msg.id,
+            role: "assistant",
+            content: textContent,
+            timestamp: msg.created_at ? new Date(msg.created_at).getTime() : Date.now(),
+            status: "streaming",
+            parts,
+          });
+        }
+        break;
+      }
+
+      case "message.updated": {
+        const msg = event.properties as any;
+        const parts: MessagePart[] = (msg.parts || []).map((p: any) => ({
+          type: p.type,
+          content: p.text || "",
+          toolName: p.toolName,
+        }));
+        
+        const textContent = parts
+          .filter((p) => p.type === "text")
+          .map((p) => p.content)
+          .join("\n");
+
+        updateMessage(msg.id, {
+          content: textContent,
+          parts,
+          status: "streaming",
+        });
+        break;
+      }
+
+      case "run.completed":
+      case "run.failed":
+        if (lastMessageIdRef.current) {
+          updateMessage(lastMessageIdRef.current, { status: "complete" });
+          lastMessageIdRef.current = null;
+        }
+        setLoading(false);
         break;
 
       case "session.updated":
@@ -150,7 +258,7 @@ export function useOpenCode(): UseOpenCodeResult {
         // Log unknown events for debugging
         console.debug("Unknown event:", event.type, event.properties);
     }
-  }, [setPendingPermission]);
+  }, [setPendingPermission, addMessage, updateMessage, setLoading]);
 
   // Connect to OpenCode server
   const connect = useCallback(async (projectPath: string) => {
@@ -186,6 +294,29 @@ export function useOpenCode(): UseOpenCodeResult {
       
       // Subscribe to events
       subscribeToEvents(info.url);
+
+      // Load sessions
+      try {
+        const sessionsResponse = await client.session.list({});
+        if (sessionsResponse.data) {
+          const sessions = (sessionsResponse.data as any[]).map((s: any) => ({
+            id: s.id,
+            title: s.title || "Untitled Session",
+            createdAt: s.created_at ? new Date(s.created_at).getTime() : Date.now(),
+            updatedAt: s.updated_at ? new Date(s.updated_at).getTime() : Date.now(),
+            messageCount: 0
+          }));
+          setSessions(sessions);
+          
+          // Select most recent session if available
+          if (sessions.length > 0) {
+            const mostRecent = sessions.sort((a: any, b: any) => b.updatedAt - a.updatedAt)[0];
+            setCurrentSessionId(mostRecent.id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load sessions:", err);
+      }
       
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to connect";
@@ -263,7 +394,7 @@ export function useOpenCode(): UseOpenCodeResult {
         ? config.selectedModel.split("/")
         : [config.selectedProvider, config.selectedModel];
       
-      const response = await client.session.prompt({
+      await client.session.promptAsync({
         path: { id: sessionId },
         body: {
           model: { providerID, modelID },
@@ -271,36 +402,9 @@ export function useOpenCode(): UseOpenCodeResult {
         },
       });
       
-      if (response.data) {
-        const assistantMessageId = `assistant-${Date.now()}`;
-        const responseData = response.data as { 
-          info?: { id: string }; 
-          parts?: Array<{ type: string; text?: string; toolName?: string }> 
-        };
-        
-        const textContent = responseData.parts
-          ?.filter((p) => p.type === "text")
-          .map((p) => p.text)
-          .join("\n") || "";
-        
-        addMessage({
-          id: responseData.info?.id || assistantMessageId,
-          role: "assistant",
-          content: textContent,
-          timestamp: Date.now(),
-          status: "complete",
-          parts: responseData.parts?.map((p) => ({
-            type: p.type as "text" | "tool_use" | "tool_result",
-            content: p.text || "",
-            toolName: p.toolName,
-          })),
-        });
-      }
-      
     } catch (err) {
       console.error("Failed to send message:", err);
       setError(err instanceof Error ? err.message : "Failed to send message");
-    } finally {
       setLoading(false);
     }
   }, [currentSessionId, createSession, config, addMessage, setLoading]);

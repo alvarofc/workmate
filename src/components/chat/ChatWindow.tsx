@@ -112,6 +112,11 @@ export function ChatWindow() {
   const isEmpty = messages.length === 0;
   const hasFolders = folders.length > 0;
   const canChat = hasFolders && isConnected;
+  
+  const lastMessage = messages[messages.length - 1];
+  const isStreamingResponse = lastMessage?.role === "assistant" && lastMessage?.status === "streaming";
+  // Only show bottom loader if we're waiting for a response but haven't started receiving it yet
+  const showLoader = status === "submitted" || (status === "streaming" && !isStreamingResponse);
 
   return (
     <div className="flex flex-col h-full">
@@ -250,7 +255,7 @@ export function ChatWindow() {
               </div>
             ))
           )}
-          {(status === "submitted" || status === "streaming") && <Loader />}
+          {showLoader && <Loader />}
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
