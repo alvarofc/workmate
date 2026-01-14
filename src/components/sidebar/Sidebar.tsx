@@ -5,7 +5,9 @@ import {
   Settings, 
   Trash2,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Sun,
+  Moon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,8 +28,17 @@ export function Sidebar() {
     removeFolder,
     isSidebarOpen, 
     toggleSidebar,
-    setSettingsOpen 
+    setSettingsOpen,
+    config,
+    updateConfig
   } = useAppStore();
+
+  const handleToggleTheme = () => {
+    // If currently system, assume we want to toggle away from the *current* system resolved value?
+    // Or just simple toggle: Light <-> Dark
+    const newTheme = config.theme === "dark" ? "light" : "dark";
+    updateConfig({ theme: newTheme });
+  };
 
   if (!isSidebarOpen) {
     return (
@@ -144,14 +155,27 @@ export function Sidebar() {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-sidebar-border p-3 flex gap-2">
         <Button 
           variant="ghost" 
-          className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-accent"
+          className="flex-1 justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-accent"
           onClick={() => setSettingsOpen(true)}
         >
           <Settings className="h-4 w-4" />
           Settings
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="text-sidebar-foreground hover:bg-sidebar-accent"
+          onClick={handleToggleTheme}
+          title="Toggle Theme"
+        >
+          {config.theme === "dark" ? (
+            <Moon className="h-4 w-4" />
+          ) : (
+            <Sun className="h-4 w-4" />
+          )}
         </Button>
       </div>
     </div>
