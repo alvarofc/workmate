@@ -1,68 +1,161 @@
 @import "tailwindcss";
 
-/* shadcn/ui CSS variables */
+/* 
+  Earthy Theme Configuration
+  Uses OKLCH for consistent perceptual lightness and chroma.
+  
+  Palette Strategy:
+  - Primary: Warm Rust/Clay (replaces previous Green)
+  - Base: Warm Stone (Dark) / Cream (Light)
+  - Texture: Subtle noise overlay (defined in body)
+*/
+
+:root {
+  /* Light Theme (Cream/Clay) */
+  --background: oklch(0.97 0.01 90);      /* Warm Cream */
+  --foreground: oklch(0.25 0.03 50);      /* Dark Brown */
+  
+  --card: oklch(0.95 0.01 90);            /* Slightly Darker Cream */
+  --card-foreground: oklch(0.25 0.03 50);
+  
+  --popover: oklch(0.95 0.01 90);
+  --popover-foreground: oklch(0.25 0.03 50);
+  
+  --primary: oklch(0.55 0.15 45);         /* Earthy Clay/Rust */
+  --primary-foreground: oklch(0.97 0.01 90); /* Cream text on Clay */
+  
+  --secondary: oklch(0.92 0.02 90);       /* Beige/Sand */
+  --secondary-foreground: oklch(0.35 0.04 50);
+  
+  --muted: oklch(0.92 0.02 90);
+  --muted-foreground: oklch(0.50 0.04 50); /* Medium Brown */
+  
+  --accent: oklch(0.90 0.03 90);          /* Warm Peach */
+  --accent-foreground: oklch(0.25 0.03 50);
+  
+  --destructive: oklch(0.55 0.15 25);     /* Earthy Red */
+  --destructive-foreground: oklch(0.97 0.01 90);
+  
+  --border: oklch(0.85 0.02 90);          /* Light Sand */
+  --input: oklch(0.85 0.02 90);
+  --ring: oklch(0.55 0.15 45);            /* Matches Primary */
+  
+  /* Sidebar Light */
+  --sidebar: oklch(0.93 0.01 90);         /* Distinct from main background */
+  --sidebar-foreground: oklch(0.30 0.03 50);
+  --sidebar-primary: oklch(0.55 0.15 45);
+  --sidebar-primary-foreground: oklch(0.97 0.01 90);
+  --sidebar-accent: oklch(0.88 0.02 90);
+  --sidebar-accent-foreground: oklch(0.25 0.03 50);
+  --sidebar-border: oklch(0.85 0.02 90);
+  --sidebar-ring: oklch(0.55 0.15 45);
+  
+  /* Charts Light */
+  --chart-1: oklch(0.55 0.15 45); /* Clay */
+  --chart-2: oklch(0.60 0.12 70); /* Ochre */
+  --chart-3: oklch(0.45 0.10 140); /* Moss */
+  --chart-4: oklch(0.50 0.10 250); /* Slate */
+  --chart-5: oklch(0.60 0.15 30); /* Rust */
+}
+
+.dark {
+  /* Dark Theme (Stone/Clay) - More Gray Tonality */
+  --background: oklch(0.18 0.01 50);      /* Desaturated Warm Stone (Grayer) */
+  --foreground: oklch(0.92 0.01 85);      /* Warm Off-White */
+  
+  --card: oklch(0.21 0.01 50);
+  --card-foreground: oklch(0.92 0.01 85);
+  
+  --popover: oklch(0.21 0.01 50);
+  --popover-foreground: oklch(0.92 0.01 85);
+  
+  --primary: oklch(0.60 0.10 45);         /* Desaturated Clay/Rust */
+  --primary-foreground: oklch(0.15 0.01 55);
+  
+  --secondary: oklch(0.25 0.01 50);
+  --secondary-foreground: oklch(0.92 0.01 85);
+  
+  --muted: oklch(0.25 0.01 50);
+  --muted-foreground: oklch(0.70 0.01 85);
+  
+  --accent: oklch(0.25 0.01 50);
+  --accent-foreground: oklch(0.92 0.01 85);
+  
+  --destructive: oklch(0.45 0.10 25);
+  --destructive-foreground: oklch(0.92 0.01 85);
+  
+  --border: oklch(0.28 0.01 50);
+  --input: oklch(0.28 0.01 50);
+  --ring: oklch(0.40 0.02 50);            /* Very subtle ring */
+  
+  /* Sidebar Dark */
+  --sidebar: oklch(0.15 0.01 50);         /* Darker Gray Stone */
+  --sidebar-foreground: oklch(0.88 0.01 85);
+  --sidebar-primary: oklch(0.60 0.10 45);
+  --sidebar-primary-foreground: oklch(0.92 0.01 85);
+  --sidebar-accent: oklch(0.22 0.01 50);
+  --sidebar-accent-foreground: oklch(0.92 0.01 85);
+  --sidebar-border: oklch(0.25 0.01 50);
+  --sidebar-ring: oklch(0.40 0.02 50);
+  
+  /* Charts Dark */
+  --chart-1: oklch(0.60 0.10 45);
+  --chart-2: oklch(0.65 0.08 70);
+  --chart-3: oklch(0.50 0.08 140);
+  --chart-4: oklch(0.55 0.08 250);
+  --chart-5: oklch(0.65 0.10 30);
+}
+
 @theme inline {
-  /* Radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  /* Radius - Slightly organic */
+  --radius-sm: 0.35rem;
+  --radius-md: 0.6rem;
+  --radius-lg: 0.85rem;
+  --radius-xl: 1.25rem;
   
-  /* Colors - Earthy Dark Theme */
-  /* Background: Deep warm stone/brown */
-  --color-background: oklch(0.18 0.03 55);
-  /* Foreground: Warm cream/off-white */
-  --color-foreground: oklch(0.92 0.02 85);
+  /* Colors mapped to variables */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
   
-  /* Card: Slightly lighter warm stone */
-  --color-card: oklch(0.21 0.03 55);
-  --color-card-foreground: oklch(0.92 0.02 85);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   
-  /* Popover: Same as card */
-  --color-popover: oklch(0.21 0.03 55);
-  --color-popover-foreground: oklch(0.92 0.02 85);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   
-  /* Primary: Muted Olive/Sage Green */
-  --color-primary: oklch(0.65 0.12 140);
-  --color-primary-foreground: oklch(0.15 0.04 140);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   
-  /* Secondary: Warm Sand/Beige (darkened for dark mode) */
-  --color-secondary: oklch(0.30 0.04 55);
-  --color-secondary-foreground: oklch(0.92 0.02 85);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   
-  /* Muted: Dark warm grey */
-  --color-muted: oklch(0.25 0.03 55);
-  --color-muted-foreground: oklch(0.70 0.02 85);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   
-  /* Accent: Terracotta/Rust (subtle) */
-  --color-accent: oklch(0.30 0.04 55);
-  --color-accent-foreground: oklch(0.92 0.02 85);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   
-  /* Destructive: Muted Earthy Red */
-  --color-destructive: oklch(0.45 0.15 25);
-  --color-destructive-foreground: oklch(0.92 0.02 85);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   
-  /* Borders: Low contrast warm grey */
-  --color-border: oklch(0.30 0.03 55);
-  --color-input: oklch(0.30 0.03 55);
-  --color-ring: oklch(0.65 0.12 140); /* Matches primary */
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   
-  /* Chart colors - Earthy tones */
-  --color-chart-1: oklch(0.65 0.15 140); /* Green */
-  --color-chart-2: oklch(0.60 0.15 50);  /* Sienna */
-  --color-chart-3: oklch(0.70 0.12 85);  /* Mustard */
-  --color-chart-4: oklch(0.55 0.10 200); /* Slate Blue */
-  --color-chart-5: oklch(0.65 0.15 25);  /* Red/Rust */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
   
-  /* Sidebar - Darker earthy tone */
-  --color-sidebar: oklch(0.15 0.03 55);
-  --color-sidebar-foreground: oklch(0.92 0.02 85);
-  --color-sidebar-primary: oklch(0.65 0.12 140);
-  --color-sidebar-primary-foreground: oklch(0.15 0.04 140);
-  --color-sidebar-accent: oklch(0.25 0.03 55);
-  --color-sidebar-accent-foreground: oklch(0.92 0.02 85);
-  --color-sidebar-border: oklch(0.25 0.03 55);
-  --color-sidebar-ring: oklch(0.65 0.12 140);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 
   /* Fonts */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -104,8 +197,8 @@ html, body, #root {
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  background-color: var(--background);
+  color: var(--foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
@@ -116,10 +209,6 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 50; /* Above everything but allowing clicks? No, z-index -1 is better if background is opaque */
-  /* If background is set on body, z-index -1 puts it behind body background? */
-  /* Actually, body has background-color. */
-  /* Let's use pointer-events: none and mix-blend-mode: overlay on top */
   z-index: 9999;
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
@@ -138,23 +227,23 @@ body::before {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: var(--border);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-muted-foreground);
+  background: var(--muted-foreground);
 }
 
 /* Selection */
 ::selection {
-  background: var(--color-primary);
-  color: var(--color-primary-foreground);
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 /* Focus styles */
 :focus-visible {
-  outline: 2px solid var(--color-ring);
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
