@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useAppStore } from "@/stores/appStore";
-import { FolderPlus, Trash2, Eye, EyeOff, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useOpenCode } from "@/hooks/useOpenCode";
+import { FolderPlus, Trash2, Eye, EyeOff, ExternalLink, Plus, Database } from "lucide-react";
+import { useState, useEffect } from "react";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 
 const PROVIDERS = [
@@ -60,7 +61,78 @@ interface SettingsDialogProps {
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { config, updateConfig, folders, addFolder, removeFolder } = useAppStore();
+  const { client } = useOpenCode();
   const [showApiKey, setShowApiKey] = useState(false);
+  const [mcpServers, setMcpServers] = useState<any[]>([]);
+  const [isAddingMcp, setIsAddingMcp] = useState(false);
+  const [newMcpConfig, setNewMcpConfig] = useState({
+    name: "",
+    type: "stdio",
+    command: "",
+    args: "",
+    url: "",
+  });
+
+  useEffect(() => {
+    if (open && client) {
+      loadMcpStatus();
+    }
+  }, [open, client]);
+
+  const loadMcpStatus = async () => {
+    if (!client) return;
+    try {
+      const response = await client.mcp.status({});
+      if (response.data && 'servers' in response.data) {
+        setMcpServers((response.data as any).servers || []);
+      }
+    } catch (err) {
+      console.error("Failed to load MCP status:", err);
+    }
+  };
+
+  const handleAddMcpServer = async () => {
+    if (!client || !newMcpConfig.name) return;
+
+    try {
+      const config: any = {
+        name: newMcpConfig.name,
+      };
+
+      if (newMcpConfig.type === "stdio") {
+        config.type = "stdio";
+        config.command = newMcpConfig.command;
+        config.args = newMcpConfig.args.split(" ").filter(Boolean);
+      } else {
+        config.type = "sse";
+        config.url = newMcpConfig.url;
+      }
+
+      await client.mcp.add({
+        body: config
+      });
+
+      setIsAddingMcp(false);
+      setNewMcpConfig({ name: "", type: "stdio", command: "", args: "", url: "" });
+      loadMcpStatus();
+    } catch (err) {
+      console.error("Failed to add MCP server:", err);
+    }
+  };
+
+  const handleRemoveMcpServer = async (name: string) => {
+    if (!client) return;
+    try {
+      // Assuming disconnect or remove endpoint
+      // The SDK has disconnect
+      await client.mcp.disconnect({
+        body: { name } 
+      } as any);
+      loadMcpStatus();
+    } catch (err) {
+      console.error("Failed to remove MCP server:", err);
+    }
+  };
 
   const selectedProvider = PROVIDERS.find((p) => p.id === config.selectedProvider);
   const availableModels = MODELS[config.selectedProvider] || [];
@@ -191,6 +263,24 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </Select>
           </div>
 
+          {/* Theme Selection */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Appearance</label>
+            <Select
+              value={config.theme}
+              onValueChange={(value: "light" | "dark" | "system") => updateConfig({ theme: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a theme" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="system">System</SelectItem>
+                <SelectItem value="light">Light (Cream)</SelectItem>
+                <SelectItem value="dark">Dark (Stone)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <Separator />
 
           {/* Folder Access */}
@@ -231,6 +321,131 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       variant="ghost"
                       size="icon"
                       onClick={() => removeFolder(folder.path)}
+                      className="text-muted-foreground hover:text-destructive flex-shrink-0"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* MCP Servers */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Database className="h-4 w-4" />
+                MCP Servers
+              </label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAddingMcp(!isAddingMcp)}
+                className="gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                Add Server
+              </Button>
+            </div>
+            
+            {isAddingMcp && (
+              <div className="p-3 border rounded-lg bg-muted/30 space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">Name</label>
+                    <Input 
+                      value={newMcpConfig.name}
+                      onChange={(e) => setNewMcpConfig({...newMcpConfig, name: e.target.value})}
+                      placeholder="e.g. memory"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">Type</label>
+                    <Select
+                      value={newMcpConfig.type}
+                      onValueChange={(value) => setNewMcpConfig({...newMcpConfig, type: value})}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="stdio">Stdio</SelectItem>
+                        <SelectItem value="sse">SSE</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                {newMcpConfig.type === "stdio" ? (
+                  <>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium">Command</label>
+                      <Input 
+                        value={newMcpConfig.command}
+                        onChange={(e) => setNewMcpConfig({...newMcpConfig, command: e.target.value})}
+                        placeholder="e.g. npx"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium">Args</label>
+                      <Input 
+                        value={newMcpConfig.args}
+                        onChange={(e) => setNewMcpConfig({...newMcpConfig, args: e.target.value})}
+                        placeholder="e.g. -y @modelcontextprotocol/server-memory"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium">URL</label>
+                    <Input 
+                      value={newMcpConfig.url}
+                      onChange={(e) => setNewMcpConfig({...newMcpConfig, url: e.target.value})}
+                      placeholder="http://localhost:8000/sse"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                )}
+                
+                <div className="flex justify-end gap-2 pt-1">
+                  <Button variant="ghost" size="sm" onClick={() => setIsAddingMcp(false)} className="h-7 text-xs">Cancel</Button>
+                  <Button size="sm" onClick={handleAddMcpServer} className="h-7 text-xs">Save</Button>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              {mcpServers.length === 0 ? (
+                <div className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-lg">
+                  No MCP servers connected
+                </div>
+              ) : (
+                mcpServers.map((server) => (
+                  <div
+                    key={server.name}
+                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium truncate">{server.name}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary uppercase">
+                          {server.type || "stdio"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {server.status || "Connected"}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveMcpServer(server.name)}
                       className="text-muted-foreground hover:text-destructive flex-shrink-0"
                     >
                       <Trash2 className="h-4 w-4" />

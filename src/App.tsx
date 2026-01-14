@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Sidebar } from "@/components/sidebar/Sidebar";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { SettingsDialog } from "@/components/settings/SettingsDialog";
@@ -12,7 +13,24 @@ function App() {
     setSettingsOpen,
     pendingPermission,
     setPendingPermission,
+    config,
   } = useAppStore();
+
+  // Handle theme switching
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+
+    if (config.theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+      root.classList.add(systemTheme);
+      return;
+    }
+
+    root.classList.add(config.theme);
+  }, [config.theme]);
 
   const { respondToPermission } = useOpenCode();
 
