@@ -62,7 +62,7 @@ function App() {
       <Sidebar />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 min-h-0">
         {/* Top bar for window drag */}
         <div className="h-10 flex-shrink-0 border-b border-border drag-region flex items-center px-4">
           <span className="text-sm text-muted-foreground no-drag">
@@ -71,7 +71,9 @@ function App() {
         </div>
 
         {/* Chat Area */}
-        <ChatWindow />
+        <div className="flex-1 min-h-0 flex flex-col">
+          <ChatWindow />
+        </div>
       </main>
 
       {/* Settings Dialog */}

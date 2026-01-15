@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Message, Session, Folder, PermissionRequest, AppConfig } from "../types";
+import type { Message, Session, Folder, PermissionRequest, AppConfig, Provider } from "../types";
 
 interface AppState {
   // Connection
@@ -25,6 +25,10 @@ interface AppState {
   folders: Folder[];
   addFolder: (folder: Folder) => void;
   removeFolder: (path: string) => void;
+
+  // Providers (loaded from OpenCode)
+  providers: Provider[];
+  setProviders: (providers: Provider[]) => void;
 
   // UI State
   isSidebarOpen: boolean;
@@ -51,11 +55,12 @@ interface AppState {
 }
 
 const defaultConfig: AppConfig = {
-  selectedProvider: "openrouter",
-  selectedModel: "anthropic/claude-sonnet-4-20250514",
-  apiKeys: {},
+  selectedProvider: "google",
+  selectedModel: "google/antigravity-gemini-3-flash",
   theme: "dark",
   folders: [],
+  favoriteModels: [],
+  isWebBrowsingEnabled: false,
 };
 
 export const useAppStore = create<AppState>()(
@@ -97,6 +102,10 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           folders: state.folders.filter((f) => f.path !== path),
         })),
+
+      // Providers (loaded from OpenCode)
+      providers: [],
+      setProviders: (providers) => set({ providers }),
 
       // UI State
       isSidebarOpen: true,
