@@ -13,7 +13,7 @@ export interface MessagePart {
   id?: string;
   toolName?: string;
   filePath?: string;
-  status?: "pending" | "running" | "completed" | "error";
+  status?: "pending" | "running" | "complete" | "error";
   // Tool-specific fields
   toolInput?: Record<string, unknown>;
   toolOutput?: unknown;

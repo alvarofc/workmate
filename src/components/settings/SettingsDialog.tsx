@@ -46,6 +46,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [keyInputProvider, setKeyInputProvider] = useState<string | null>(null);
   const [keyInputValue, setKeyInputValue] = useState("");
   const [isAuthenticating, setIsAuthenticating] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [logoErrors, setLogoErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (open && client) {
@@ -119,12 +121,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   }, [providers, providerSearch]);
 
   const handleAuth = async (providerId: string, method: 'oauth' | 'key') => {
+    setAuthError(null);
     if (method === 'oauth') {
       try {
         setIsAuthenticating(providerId);
         await authorizeProvider(providerId);
       } catch (err) {
-        // Error handling
+        console.error("OAuth authorization failed:", err);
+        setAuthError(err instanceof Error ? err.message : "OAuth authorization failed");
       } finally {
         setIsAuthenticating(null);
       }
@@ -136,13 +140,15 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   const handleSubmitKey = async (providerId: string) => {
     if (!keyInputValue.trim()) return;
+    setAuthError(null);
     try {
       setIsAuthenticating(providerId);
       await setProviderKey(providerId, keyInputValue);
       setKeyInputProvider(null);
       setKeyInputValue("");
     } catch (err) {
-      // Error handling
+      console.error("Failed to set API key:", err);
+      setAuthError(err instanceof Error ? err.message : "Failed to set API key");
     } finally {
       setIsAuthenticating(null);
     }
@@ -150,15 +156,21 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
   const getProviderLogo = (providerId: string) => {
     const logoId = providerId === "opencode" ? "opencode" : providerId;
+    
+    if (logoErrors[providerId]) {
+      return (
+        <div className="h-4 w-4 flex items-center justify-center bg-muted rounded-sm text-[10px] font-bold">
+          {providerId[0].toUpperCase()}
+        </div>
+      );
+    }
+
     return (
       <img
         src={`https://models.dev/logos/${logoId}.svg`}
         alt={`${providerId} logo`}
         className="h-4 w-4 dark:invert"
-        onError={(e) => {
-          e.currentTarget.style.display = 'none';
-          e.currentTarget.parentElement?.insertAdjacentHTML('beforeend', `<div class="h-4 w-4 flex items-center justify-center bg-muted rounded-sm text-[10px] font-bold">${providerId[0].toUpperCase()}</div>`);
-        }}
+        onError={() => setLogoErrors(prev => ({ ...prev, [providerId]: true }))}
       />
     );
   };
@@ -318,6 +330,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 className="pl-9 bg-muted/20 border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring transition-all"
               />
             </div>
+
+            {authError && (
+              <Alert variant="destructive" className="py-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">{authError}</AlertDescription>
+              </Alert>
+            )}
 
             <div className="max-h-[240px] overflow-y-auto space-y-2 border rounded-lg p-2 bg-muted/20">
               {filteredProviders.length === 0 ? (

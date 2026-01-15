@@ -259,32 +259,32 @@ export function OpenCodeProvider({ children }: { children: ReactNode }) {
           );
           
           let newPart: MessagePart;
-          if (toolState?.status === "completed") {
-            // Parse output - try to determine if it's JSON
-            let outputContent = "";
-            let outputObj: unknown = toolState.output;
-            
-            if (typeof toolState.output === "string") {
-              try {
-                outputObj = JSON.parse(toolState.output);
-                outputContent = JSON.stringify(outputObj, null, 2);
-              } catch {
-                outputContent = toolState.output;
+            if (toolState?.status === "completed") {
+              // Parse output - try to determine if it's JSON
+              let outputContent = "";
+              let outputObj: unknown = toolState.output;
+              
+              if (typeof toolState.output === "string") {
+                try {
+                  outputObj = JSON.parse(toolState.output);
+                  outputContent = JSON.stringify(outputObj, null, 2);
+                } catch {
+                  outputContent = toolState.output;
+                }
+              } else if (toolState.output) {
+                outputContent = JSON.stringify(toolState.output, null, 2);
               }
-            } else if (toolState.output) {
-              outputContent = JSON.stringify(toolState.output, null, 2);
-            }
-            
-            newPart = {
-              type: "tool_result",
-              id: part.id,
-              toolName: toolName,
-              content: outputContent,
-              toolInput: toolState?.input as Record<string, unknown>,
-              toolOutput: outputObj,
-              status: "completed",
-            };
-          } else if (toolState?.status === "error") {
+              
+              newPart = {
+                type: "tool_result",
+                id: part.id,
+                toolName: toolName,
+                content: outputContent,
+                toolInput: toolState?.input as Record<string, unknown>,
+                toolOutput: outputObj,
+                status: "complete",
+              };
+            } else if (toolState?.status === "error") {
             newPart = {
               type: "tool_result",
               id: part.id,
@@ -503,7 +503,7 @@ export function OpenCodeProvider({ children }: { children: ReactNode }) {
                 toolInput: toolState.input,
                 toolOutput: toolState.output,
                 toolError: toolState.error,
-                status: isError ? "error" : (isCompleted ? "completed" : (toolState.status as MessagePart["status"] || "completed")),
+                status: isError ? "error" : (isCompleted ? "complete" : (toolState.status as MessagePart["status"] || "complete")),
               };
             } else {
               // Fallback for other types

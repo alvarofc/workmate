@@ -142,8 +142,16 @@ export function Sidebar() {
               <div
                 key={session.id}
                 onClick={() => handleSelectSession(session.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSelectSession(session.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
                 className={cn(
-                  "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer group",
+                  "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer group outline-none focus-visible:ring-1 focus-visible:ring-sidebar-ring",
                   "hover:bg-sidebar-accent",
                   currentSessionId === session.id 
                     ? "bg-sidebar-accent text-sidebar-accent-foreground" 

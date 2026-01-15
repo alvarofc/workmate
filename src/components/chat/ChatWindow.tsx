@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import {
   Conversation,
   ConversationContent,
@@ -98,15 +98,22 @@ export function ChatWindow() {
     navigator.clipboard.writeText(text);
   }, []);
 
-  const handleAddFolder = useCallback(() => {
-    setSettingsOpen(true);
-  }, [setSettingsOpen]);
+  const lastAssistantId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "assistant") return messages[i].id;
+    }
+    return null;
+  }, [messages]);
 
   const handleRetry = useCallback(() => {
     if (folders.length > 0) {
       connect(folders[0].path);
     }
   }, [folders, connect]);
+
+  const handleAddFolder = useCallback(() => {
+    setSettingsOpen(true);
+  }, [setSettingsOpen]);
 
   const handleRegenerate = useCallback(async () => {
     try {
@@ -209,14 +216,16 @@ export function ChatWindow() {
                               >
                                 <CopyIcon className="h-3 w-3" />
                               </MessageAction>
-                              <MessageAction
-                                onClick={handleRegenerate}
-                                label="Retry"
-                                tooltip="Regenerate response"
-                                disabled={isLoading}
-                              >
-                                <RefreshCcwIcon className="h-3 w-3" />
-                              </MessageAction>
+                              {message.id === lastAssistantId && (
+                                <MessageAction
+                                  onClick={handleRegenerate}
+                                  label="Retry"
+                                  tooltip="Regenerate response"
+                                  disabled={isLoading}
+                                >
+                                  <RefreshCcwIcon className="h-3 w-3" />
+                                </MessageAction>
+                              )}
                             </MessageActions>
                           )}
                         </Message>
