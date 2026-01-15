@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/stores/appStore";
+import { useOpenCode } from "@/hooks/useOpenCode";
 import {
   Tooltip,
   TooltipContent,
@@ -22,16 +23,47 @@ import {
 export function Sidebar() {
   const { 
     sessions, 
-    currentSessionId, 
-    setCurrentSession,
     folders,
     removeFolder,
     isSidebarOpen, 
     toggleSidebar,
     setSettingsOpen,
     config,
-    updateConfig
+    updateConfig,
+    setMessages,
   } = useAppStore();
+
+  const {
+    currentSessionId,
+    createSession,
+    switchSession,
+    deleteSession,
+    isConnected,
+  } = useOpenCode();
+
+  const handleSelectSession = (sessionId: string) => {
+    switchSession(sessionId);
+  };
+
+  const handleNewChat = async () => {
+    if (!isConnected) return;
+    try {
+      setMessages([]); // Clear messages immediately
+      await createSession();
+    } catch (err) {
+      console.error("Failed to create session:", err);
+    }
+  };
+
+  const handleDeleteSession = async (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation(); // Prevent selecting the session
+    if (!isConnected) return;
+    try {
+      await deleteSession(sessionId);
+    } catch (err) {
+      console.error("Failed to delete session:", err);
+    }
+  };
 
   const handleToggleTheme = () => {
     // If currently system, assume we want to toggle away from the *current* system resolved value?
@@ -68,7 +100,10 @@ export function Sidebar() {
     <div className="w-64 h-full bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-sidebar-border drag-region">
-        <span className="font-semibold text-sidebar-foreground no-drag">Workmate</span>
+        <div className="flex items-center gap-2 no-drag">
+          <img src="/workmate.svg" alt="Workmate" className="h-6 w-6" />
+          <span className="font-semibold text-sidebar-foreground">Workmate</span>
+        </div>
         <Button 
           variant="ghost" 
           size="icon"
@@ -84,7 +119,8 @@ export function Sidebar() {
         <Button 
           variant="secondary" 
           className="w-full justify-start gap-2"
-          onClick={() => setCurrentSession(null)}
+          onClick={handleNewChat}
+          disabled={!isConnected}
         >
           <Plus className="h-4 w-4" />
           New Chat
@@ -103,11 +139,11 @@ export function Sidebar() {
             </div>
           ) : (
             sessions.map((session) => (
-              <button
+              <div
                 key={session.id}
-                onClick={() => setCurrentSession(session.id)}
+                onClick={() => handleSelectSession(session.id)}
                 className={cn(
-                  "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors",
+                  "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer group",
                   "hover:bg-sidebar-accent",
                   currentSessionId === session.id 
                     ? "bg-sidebar-accent text-sidebar-accent-foreground" 
@@ -116,9 +152,16 @@ export function Sidebar() {
               >
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{session.title || "New Chat"}</span>
+                  <span className="truncate flex-1">{session.title || "New Chat"}</span>
+                  <button
+                    onClick={(e) => handleDeleteSession(e, session.id)}
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity p-0.5 rounded hover:bg-sidebar-accent"
+                    title="Delete conversation"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
                 </div>
-              </button>
+              </div>
             ))
           )}
         </div>

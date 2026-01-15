@@ -8,10 +8,16 @@ export interface Message {
 }
 
 export interface MessagePart {
-  type: "text" | "tool_use" | "tool_result" | "file_edit" | "file_create";
+  type: "text" | "reasoning" | "tool_use" | "tool_result" | "file_edit" | "file_create";
   content: string;
+  id?: string;
   toolName?: string;
   filePath?: string;
+  status?: "pending" | "running" | "completed" | "error";
+  // Tool-specific fields
+  toolInput?: Record<string, unknown>;
+  toolOutput?: unknown;
+  toolError?: string;
 }
 
 export interface Session {
@@ -33,20 +39,33 @@ export interface Provider {
   name: string;
   models: Model[];
   configured: boolean;
+  // Auth methods available
+  authMethods?: string[];
 }
 
 export interface Model {
   id: string;
   name: string;
   description?: string;
+  // From OpenCode config
+  limit?: {
+    context?: number;
+    output?: number;
+  };
+  modalities?: {
+    input?: string[];
+    output?: string[];
+  };
 }
 
 export interface AppConfig {
   selectedProvider: string;
   selectedModel: string;
-  apiKeys: Record<string, string>;
+  // We no longer store API keys here - OpenCode manages auth
   theme: "dark" | "light" | "system";
   folders: Folder[];
+  favoriteModels?: string[]; // array of "providerId/modelId"
+  isWebBrowsingEnabled?: boolean;
 }
 
 export interface PermissionRequest {
