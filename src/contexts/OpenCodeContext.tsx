@@ -503,7 +503,7 @@ export function OpenCodeProvider({ children }: { children: ReactNode }) {
                 toolInput: toolState.input,
                 toolOutput: toolState.output,
                 toolError: toolState.error,
-                status: isError ? "error" : "completed",
+                status: isError ? "error" : (isCompleted ? "completed" : (toolState.status as MessagePart["status"] || "completed")),
               };
             } else {
               // Fallback for other types
