@@ -64,6 +64,7 @@ export function ChatWindow() {
     connect,
     sendMessage,
     regenerateLastMessage,
+    abortSession,
   } = useOpenCode();
 
   // Auto-connect when folders are added
@@ -75,6 +76,15 @@ export function ChatWindow() {
   }, [folders, isConnected, isConnecting, isInstalled, connect]);
 
   const handleSubmit = useCallback(async (message: PromptInputMessage) => {
+    if (isLoading) {
+      try {
+        await abortSession();
+      } catch (err) {
+        console.error("Failed to abort session:", err);
+      }
+      return;
+    }
+
     const hasText = Boolean(message.text);
     const hasAttachments = Boolean(message.files?.length);
 
@@ -92,7 +102,7 @@ export function ChatWindow() {
       console.error("Failed to send message:", err);
     }
     // Don't reset status here - isLoading will handle it
-  }, [setInputValue, sendMessage]);
+  }, [setInputValue, sendMessage, isLoading, abortSession]);
 
   const handleCopy = useCallback((text: string) => {
     navigator.clipboard.writeText(text);
@@ -351,7 +361,7 @@ export function ChatWindow() {
               </PromptInputActionMenu>
             </PromptInputTools>
             <PromptInputSubmit 
-              disabled={!inputValue.trim() || !canChat || isLoading} 
+              disabled={(!inputValue.trim() && !isLoading) || !canChat} 
               status={isLoading ? "streaming" : "ready"}
             />
           </PromptInputFooter>

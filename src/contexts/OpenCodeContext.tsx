@@ -656,6 +656,29 @@ export function OpenCodeProvider({ children }: { children: ReactNode }) {
     }
   }, [setProviders]);
 
+  const pollProviderStatus = useCallback(async (providerId: string, maxAttempts = 12) => {
+    let attempts = 0;
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    
+    console.log(`[pollProviderStatus] Starting poll for ${providerId}`);
+    
+    while (attempts < maxAttempts) {
+      attempts++;
+      await loadProviders();
+      
+      const provider = useAppStore.getState().providers.find(p => p.id === providerId);
+      if (provider?.configured) {
+        console.log(`[pollProviderStatus] Provider ${providerId} is now configured.`);
+        return;
+      }
+      
+      // Exponential backoff: 2s, 3s, 4.5s, 6.7s... capped at 10s
+      const waitTime = Math.min(2000 * Math.pow(1.5, attempts - 1), 10000);
+      await delay(waitTime);
+    }
+    console.warn(`[pollProviderStatus] Max attempts reached for provider ${providerId}`);
+  }, [loadProviders]);
+
   const authorizeProvider = useCallback(async (providerId: string) => {
     const client = clientRef.current;
     if (!client) throw new Error("Not connected to OpenCode");
@@ -674,15 +697,13 @@ export function OpenCodeProvider({ children }: { children: ReactNode }) {
         window.open((response.data as any).url, '_blank');
       }
       
-      // Reload providers to update status
-      // We might need to wait for the user to complete auth, 
-      // but reloading immediately is a good start
-      setTimeout(() => loadProviders(), 5000); 
+      // Start polling for status instead of a fixed timeout
+      pollProviderStatus(providerId);
     } catch (err) {
       console.error("Failed to authorize provider:", err);
       throw err;
     }
-  }, [loadProviders]);
+  }, [pollProviderStatus]);
 
   const setProviderKey = useCallback(async (providerId: string, key: string) => {
     const client = clientRef.current;
