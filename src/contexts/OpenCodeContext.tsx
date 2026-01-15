@@ -654,7 +654,7 @@ export function OpenCodeProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("Failed to load providers:", err);
     }
-  }, [setProviders, config.selectedProvider]);
+  }, [setProviders]);
 
   const authorizeProvider = useCallback(async (providerId: string) => {
     const client = clientRef.current;
